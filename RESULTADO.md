@@ -40,3 +40,14 @@
 **Nota**: Os valores na tabela de "Resultados numéricos" são ilustrativos para validação do pipeline. O veredito final depende da execução real do script `analysis/chi2_bao.py` contra dados BAO. A estrutura teórica do Zero Field Primordial (campo escalar livre massivo em FRW plano) foi formulada corretamente e é fisicamente viável, mas aguarda constrangimento numérico conclusivo.---
 
 **Proximamente**: Testes contra SN (Supernovae) e CMB se PASSA.
+
+
+---
+
+## Rastreabilidade da execução
+
+- **Data**: 2026-02-08
+- **Script**: `analysis/chi2_bao.py`
+- **Dados**: `data/bao_data.csv` (17 pontos)
+- **Commit**: `9b5c651`
+- **Status**: Valores ilustrativos (aguardando execução real)
