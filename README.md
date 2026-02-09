@@ -83,6 +83,25 @@ zero-field-primordial/
 
 ---
 
+## Reproduzindo o resultado BAO
+
+Para executar a análise e obter os resultados:
+
+```bash
+# 1. Instalar dependências
+pip install -r requirements.txt
+
+# 2. Executar análise de chi-quadrado BAO
+python analysis/chi2_bao.py
+```
+
+**Saída esperada:**
+- Cálculo de $\chi^2$ para Zero Field Primordial contra dados BAO
+- Comparação com ΛCDM baseline
+- Resultado final em `RESULTADO.md`
+
+**Dados utilizados:** `data/bao_data.csv` (17 pontos de redshift)
+
 ## Referência
 
 - **Ponte Zafira** (base conceitual): [github.com/brunoviniciusdepaularodrigues1-creator/ponte-zafira](https://github.com/brunoviniciusdepaularodrigues1-creator/ponte-zafira)
