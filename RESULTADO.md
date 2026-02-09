@@ -30,14 +30,13 @@
 
 ## Veredito
 
-**STATUS**: ✅ PASSA - $\chi^2_{ZFP} = 13.89 < \chi^2_{LCDM} + 5 = 21.24$hi2_bao.py`]
+**STATUS**: ⚠️ PROVISÓRIO — Valores ilustrativos para validação do pipeline
+- **Veredito suspenso** até execução real de `analysis/chi2_bao.py`
+- - **Pipeline**: Em desenvolvimento (estrutura validada, execução pendente)
 
-- **PASSA** ✅: $\chi^2_{ZFP} < \chi^2_{LCDM} + 5$
-- **FALHA** ❌: $\chi^2_{ZFP} > \chi^2_{LCDM} + 5$
 
 ## Justificativa objetiva
 
-O modelo Zero Field Primordial demonstra concordância com dados BAO isotropo a 17 redshifts (z = 0.106 a 1.02). Com $\chi^2 = 13.89$, o modelo alcança $\Delta\chi^2 = -2.35$ em relação ao LCDM baseline ($\chi^2 = 16.24$), satisfazendo o critério $\chi^2_{ZFP} < \chi^2_{LCDM} + 5$. A parametrização escalar massivo (m = $10^{-42}$ GeV) em geometria FRW plana sem acoplamentos nao-triviais apresenta compatibilidade fisicamente viavel com observacoes BAO, validando a hipótese de um campo primordial descartável sem priors subjetivos adicionados.
----
+**Nota**: Os valores na tabela de "Resultados numéricos" são ilustrativos para validação do pipeline. O veredito final depende da execução real do script `analysis/chi2_bao.py` contra dados BAO. A estrutura teórica do Zero Field Primordial (campo escalar livre massivo em FRW plano) foi formulada corretamente e é fisicamente viável, mas aguarda constrangimento numérico conclusivo.---
 
 **Proximamente**: Testes contra SN (Supernovae) e CMB se PASSA.
