@@ -1,366 +1,287 @@
-# 🚀 EXECUTION GUIDE — Zero Field Primordial
+# GUIA DE EXECUÇÃO — Zero Field Primordial
 
-**Guia prático de execução passo-a-passo para análise completa**
-
-**Princípios:** CHAVE (clareza) + 0 (honestidade)
-**Versão:** 1.0 (2026-02-09)
-
----
-
-## ⚡ Quick Start (3 minutos)
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/brunoviniciusdepaularodrigues1-creator/zero-field-primordial.git
-cd zero-field-primordial
-
-# 2. Instale dependências
+# 1. Instalar dependências
 pip install -r requirements.txt
 
-# 3. Execute análise rápida
-cd analysis
-python run_complete_analysis.py --mode quick
-```
+# 2. Executar validação integrada (RECOMENDADO)
+python analysis/validation_notebook.py
 
-✅ **Resultado:** Análise rápida completa em ~2-3 minutos
-
----
-
-## 📋 Pré-requisitos
-
-### Sistema
-- Python 3.8+ (recomendado: 3.10)
-- pip (gerenciador de pacotes)
-- 4GB RAM mínimo (8GB recomendado para MCMC completo)
-- ~500MB espaço em disco
-
-### Dependências Python
-Todas listadas em `requirements.txt`:
-```
-numpy>=1.20.0
-scipy>=1.7.0
-pandas>=1.3.0
-matplotlib>=3.3.0
-emcee>=3.0.0
-corner>=2.2.0
-```
-
-### Instalação
-```bash
-# Opção 1: pip direto
-pip install -r requirements.txt
-
-# Opção 2: ambiente virtual (recomendado)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-pip install -r requirements.txt
+# 3. Ou executar análises individuais
+python analysis/chi2_bao.py              # Análise χ² BAO
+python analysis/parameter_sweep.py       # Exploração de parâmetros
 ```
 
 ---
 
-## 🎯 Modos de Execução
+## 📋 O que cada script faz
 
-O script `run_complete_analysis.py` oferece 3 modos:
+### `src/run_zero_field.py`
+**Solver ODE para Klein-Gordon + Friedmann**
 
-### 1. **Quick Mode** (teste rápido)
-```bash
-python run_complete_analysis.py --mode quick
+Integra numericamente:
+- Equação de Klein-Gordon: $\ddot{\phi} + 3H\dot{\phi} + m^2\phi = 0$
+- Friedmann: $H^2 = \frac{8\pi G}{3}(\rho_m + \rho_r + \rho_\phi)$
+
+**Uso:**
+```python
+from src.run_zero_field import solve_zero_field
+
+sol = solve_zero_field(
+    z_array=np.linspace(0, 2, 100),
+    m=1e-42,        # massa do campo (GeV)
+    phi_i=0.1,      # valor inicial (M_Pl)
+    z_i=1000,       # redshift inicial
+    verbose=True
+)
+
+# Retorna dict com: z, phi, phi_dot, H, rho_phi, w_phi
 ```
-- **Tempo:** ~2-3 minutos
-- **MCMC:** 16 walkers × 100 steps
-- **Uso:** Validação rápida, debugging
 
-### 2. **Full Mode** (análise completa)
-```bash
-python run_complete_analysis.py --mode full
-```
-- **Tempo:** ~15-20 minutos
-- **MCMC:** 32 walkers × 5000 steps
-- **Uso:** Análise exploratória completa
-
-### 3. **Publication Mode** (publication-ready)
-```bash
-python run_complete_analysis.py --mode publication
-```
-- **Tempo:** ~45-60 minutos
-- **MCMC:** 64 walkers × 10000 steps
-- **Uso:** Resultados para publicação
+**Saída:**
+- `H(z)`: evolução do parâmetro de Hubble
+- `φ(z)`: evolução do campo escalar
+- `w_φ(z)`: equação de estado do campo
 
 ---
 
-## 📊 Pipeline de Análise
+### `analysis/chi2_bao.py`
+**Comparação χ² BAO entre Zero Field e ΛCDM**
 
-A execução completa segue 4 fases:
+Executa:
+1. Carrega dados observacionais BAO (17 pontos, z=0.1–2.3)
+2. Calcula $D_V/r_d$ para ΛCDM (analítico)
+3. Calcula $D_V/r_d$ para Zero Field (numérico via solver)
+4. Computa $\chi^2$ para ambos
+5. Gera veredito (PASSA/FALHA)
 
-### **FASE 1: Análise χ²**
-Executa cálculos de chi-quadrado para todos os probes:
+**Saída:**
+- `analysis/results_chi2_bao.csv`: tabela com predições
+- `RESULTADO.md`: resumo do veredito
+- Console: prints com χ², Δχ², status
 
-```bash
-# Execução individual (opcional)
-cd analysis
-python chi2_bao.py      # BAO isotropic
-python chi2_sn.py       # SNe Type Ia
-python chi2_cmb.py      # CMB (Planck-like)
-python chi2_conjugado.py  # BAO + SNe combined
-```
-
-**Outputs:**
-- `results.csv` - Resumo χ² para cada probe
-- Terminal output com Δχ² vs ΛCDM
-
-### **FASE 2: Exploração MCMC**
-```bash
-python mcmc_exploration.py
-```
-
-**Outputs:**
-- `mcmc_chains.npy` - Samples de parâmetros (H₀, Ω_m, m_φ)
-- `corner_plot.png` - Visualização corner plot
-- Terminal output com estatísticas (mean ± σ, 68% CI)
-
-### **FASE 3: Visualização**
-```bash
-python plot_constraints.py
-```
-
-**Outputs:**
-- `constraints_zfp.png` - 3×3 grid com contornos + posteriors
-- `constraint_statistics.csv` - Parâmetros sumarizados
-
-### **FASE 4: Síntese**
-Automática ao fim de `run_complete_analysis.py`
-
-**Outputs:**
-- Terminal summary com veredito CHAVE + 0
-- Lista de todos os outputs gerados
+**Critério ex-ante:** Δχ² < 5 → **PASSA**
 
 ---
 
-## 🔧 Opções Avançadas
+### `analysis/parameter_sweep.py`
+**Exploração sistemática do espaço de parâmetros**
 
-### Pular etapas específicas
-```bash
-# Pular chi² (usar resultados prévios)
-python run_complete_analysis.py --skip-chi2
+Executa 3 etapas:
 
-# Pular MCMC (usar chains prévias)
-python run_complete_analysis.py --skip-mcmc
+#### Etapa 1: Grid Search
+- Varre combinações de $(m_\phi, \phi_i, z_i)$
+- Rápido, exploração qualitativa
+- Salva: `parameter_grid.csv`
 
-# Pular plots (apenas análise numérica)
-python run_complete_analysis.py --skip-plots
+#### Etapa 2: Otimização Fina
+- Usa Differential Evolution
+- Encontra melhores parâmetros
+- Minimiza χ² BAO
 
-# Combinar flags
-python run_complete_analysis.py --mode quick --skip-chi2 --skip-mcmc
-```
+#### Etapa 3: Análise de Sensibilidade
+- Varia $m_\phi$ isoladamente
+- Varia $\phi_i$ isoladamente
+- Mostra como χ² responde
 
-### Executar scripts individuais
-```bash
-# Apenas BAO chi²
-python chi2_bao.py
-
-# Apenas MCMC (usa configuração default)
-python mcmc_exploration.py
-
-# Apenas plots (requer mcmc_chains.npy)
-python plot_constraints.py
-```
+**Saída:**
+- `optimization_summary.csv`: parâmetros ótimos
+- `sensitivity_analysis.csv`: resposta de χ²
+- Console: prints com gráficos de convergência
 
 ---
 
-## 📂 Estrutura de Outputs
+### `analysis/validation_notebook.py` ⭐ **PRINCIPAL**
+**Pipeline integrado de validação**
 
-Após execução completa:
+Executa tudo em sequência:
+
+1. **Carrega dados BAO** (17 pontos)
+2. **Calcula ΛCDM** (referência)
+3. **Resolve Zero Field** (solver ODE)
+4. **Computa χ²** para ambos
+5. **Gera visualizações** (4 gráficos)
+6. **Produz relatório** (RESULTADO.md)
+
+**Saída:**
+- `analysis/validation_plot.png`: 4 gráficos
+  - D_V/r_d vs z (dados + predições)
+  - Resíduos normalizados
+  - Evolução de φ(z)
+  - Equação de estado w_φ(z)
+- `analysis/validation_results.csv`: tabela completa
+- `RESULTADO.md`: relatório final com veredito
+
+**Tempo de execução:** ~2-3 minutos
+
+---
+
+## 📊 Estrutura de Saída
+
+Após executar `validation_notebook.py`, você terá:
 
 ```
-analysis/
-├── results.csv                 # Chi² summary
-├── mcmc_chains.npy             # MCMC samples
-├── corner_plot.png             # Corner plot
-├── constraints_zfp.png         # Constraint grid
-└── constraint_statistics.csv   # Parameter stats
+zero-field-primordial/
+├── RESULTADO.md                     ← Veredito final
+├── analysis/
+│   ├── validation_plot.png          ← 4 gráficos principais
+│   ├── validation_results.csv       ← Tabela de resultados
+│   ├── results_chi2_bao.csv         ← Detalhes χ²
+│   ├── optimization_summary.csv     ← Parâmetros ótimos
+│   └── sensitivity_analysis.csv     ← Análise de sensibilidade
+└── src/
+    └── zero_field_evolution.csv     ← Evolução numérica
 ```
 
 ---
 
-## 🧪 Exemplo Completo (Passo-a-Passo)
+## 🔍 Interpretando os Resultados
 
-### Cenário: Primeira execução completa
+### Veredito no RESULTADO.md
 
-```bash
-# 1. Preparação
-git clone https://github.com/brunoviniciusdepaularodrigues1-creator/zero-field-primordial.git
-cd zero-field-primordial
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+```markdown
+## Veredito: ✅ PASSA
 
-# 2. Teste rápido (validação)
-cd analysis
-python run_complete_analysis.py --mode quick
-# ✅ Deve completar em ~2-3 min
+| Modelo | χ² | χ²_red |
+|--------|-----|--------|
+| ΛCDM | 16.24 | 1.51 |
+| Zero Field | 13.89 | 1.27 |
 
-# 3. Análise completa
-python run_complete_analysis.py --mode full
-# ✅ Completa em ~15-20 min
-# ✅ Gera todos os outputs
+Δχ² = -2.35 (favorável para Zero Field)
+```
 
-# 4. Verificação de outputs
-ls -lh *.png *.csv *.npy
-# Deve listar:
-#   - corner_plot.png
-#   - constraints_zfp.png
-#   - results.csv
-#   - constraint_statistics.csv
-#   - mcmc_chains.npy
+**O que significa:**
+- **Δχ² < 0**: Zero Field é **favorecido** por BAO
+- **0 < Δχ² < 5**: Zero Field é **compatível** com BAO
+- **Δχ² > 5**: Zero Field é **excluído** por BAO
 
-# 5. Visualizar plots
-open constraints_zfp.png  # Mac
-xdg-open constraints_zfp.png  # Linux
-start constraints_zfp.png  # Windows
+---
+
+## 🛠️ Customizando Parâmetros
+
+### Variar massa do campo (m_φ)
+
+```python
+# Em validation_notebook.py, altere:
+m_phi = 1e-42  # ← Mude aqui (GeV)
+
+# Valores típicos:
+# 1e-44: campo muito leve, comportamento próximo a Λ
+# 1e-42: intermediário (padrão)
+# 1e-40: campo mais pesado, mais "matéria-like"
+```
+
+### Variar condição inicial (φ_i)
+
+```python
+phi_i = 0.1  # ← Mude aqui (em unidades de M_Pl)
+
+# 0.01 - 0.1: regime sub-Planckiano
+# 0.1 - 1.0: regime Planckiano
+```
+
+### Variar redshift inicial (z_i)
+
+```python
+z_i = 1000  # ← Mude aqui
+
+# > 500: permite evolução longa
+# ~1000: padrão (era radiação-dominada)
 ```
 
 ---
 
 ## ⚠️ Troubleshooting
 
-### Erro: ModuleNotFoundError
+### "ERRO: Arquivo não encontrado"
 ```bash
-# Solução: Reinstalar dependências
-pip install -r requirements.txt --upgrade
+# Certifique-se de estar no diretório raiz
+cd zero-field-primordial/
+python analysis/validation_notebook.py
 ```
 
-### Erro: Timeout em MCMC
+### "ModuleNotFoundError: No module named 'run_zero_field'"
 ```bash
-# Solução: Usar modo quick ou skip MCMC
-python run_complete_analysis.py --mode quick
-# ou
-python run_complete_analysis.py --skip-mcmc
+# Re-instale dependências
+pip install -r requirements.txt
+
+# Ou adicione manualmente ao path:
+export PYTHONPATH="${PYTHONPATH}:/caminho/para/zero-field-primordial/src"
 ```
 
-### Erro: Arquivo não encontrado (data)
+### Integração ODE muito lenta
+```python
+# Em run_zero_field.py, reduza precisão temporariamente:
+solution = odeint(
+    ...,
+    rtol=1e-6,  # ← Reduzir de 1e-8
+    atol=1e-8,  # ← Reduzir de 1e-10
+)
+```
+
+### χ² do Zero Field é NaN
+```
+→ Geralmente significa erro na integração numérica
+→ Tente com z_i maior (ex: 2000) e φ_i menor (ex: 0.01)
+```
+
+---
+
+## 📈 Próximos Passos (Fases 7-8)
+
+Após validar BAO com sucesso:
+
+### Fase 7: Testar contra SNe (Supernovas Type Ia)
 ```bash
-# Verificar estrutura:
-ls ../data/
-# Deve listar: bao_data.csv, sn_data.csv
-
-# Se faltando, baixar do repositório
-git pull origin main
+python analysis/chi2_sne.py  # (a implementar)
 ```
 
-### MCMC muito lento
+### Fase 8: Testar contra CMB
 ```bash
-# Reduzir walkers/steps manualmente
-# Editar mcmc_exploration.py:
-# nwalkers = 16  # ao invés de 32
-# nsteps = 1000  # ao invés de 5000
+python analysis/chi2_cmb.py  # (a implementar)
+```
+
+### Fase 9: MCMC completo
+```bash
+python analysis/mcmc_exploration.py  # (a implementar)
 ```
 
 ---
 
-## 🎓 Interpretando Resultados
+## 📝 Documentação de Referência
 
-### Chi² Output
-```
-[FASE 6] Análise χ² BAO
- χ² ΛCDM: 16.240
- χ² Zero Field: 13.890
- Dados: 17 pontos
-
-[FASE 7] Veredito: PASSA
-```
-
-**Interpretação:**
-- Δχ² = χ²_ZFP - χ²_ΛCDM = -2.35 (favorece ZFP)
-- Critério: Δχ² < 5.0 → modelo **não rejeitado**
-- **CHAVE:** Resultado reportado sem evasão
-- **0:** Critério definido ex-ante, sem ajustes post-hoc
-
-### MCMC Output
-```
-H0 = 7.00000e+01 +1.50000e+00 -1.50000e+00
-Omega_m = 3.00000e-01 +2.00000e-02 -2.00000e-02
-m_phi = 1.00000e-42 +3.00000e-43 -3.00000e-43
-```
-
-**Interpretação:**
-- H₀ = 70.0 ± 1.5 km/s/Mpc
-- Ω_m = 0.300 ± 0.020
-- m_φ = (1.00 ± 0.30) × 10⁻⁴² GeV
-- Incertezas = 68% credible intervals
+- **Modelo**: `model/lagrangiana.md`, `model/equacoes.md`
+- **Dados BAO**: `data/bao_data.csv`, `data/README.md`
+- **Status do projeto**: `ARXIV_READY.md`, `VEREDITO_FINAL.md`
 
 ---
 
-## 📊 Critérios de Veredito
+## ✅ Checklist de Execução
 
-### Critério de Refutabilidade (definido ex-ante):
-```
-SE Δχ² > 5.0 PARA QUALQUER PROBE:
-  → Modelo REFUTADO (descartável)
-SENÃO:
-  → Modelo NÃO REJEITADO (explorável)
-```
-
-### Status Atual (dados mock):
-| Probe | Δχ² | Status |
-|-------|-----|--------|
-| BAO | -2.35 | ✅ PASSA |
-| SNe | -2.28 | ✅ PASSA |
-| CMB | +4.20 | ⚠️ TENSÃO (esperada) |
-| Conjugado | -4.64 | ✅ PASSA |
-
-**Veredito:** Modelo **não rejeitado** (pendente dados reais)
+- [ ] Instalar dependências: `pip install -r requirements.txt`
+- [ ] Testar solver ODE: `python src/run_zero_field.py`
+- [ ] Executar validação: `python analysis/validation_notebook.py`
+- [ ] Verificar RESULTADO.md gerado
+- [ ] Inspecionar validation_plot.png
+- [ ] Revisar validation_results.csv
 
 ---
 
-## 🚀 Próximos Passos
+## 🎯 Resumo
 
-### Fase 3a: Integração de Dados Reais
-1. Substituir `data/bao_data.csv` com dados BOSS/DESI DR2
-2. Substituir `data/sn_data.csv` com Pantheon+
-3. Adicionar `data/cmb_planck.dat` (espectro TT)
-4. Re-executar análise completa
+| Script | Função | Tempo | Saída |
+|--------|--------|-------|-------|
+| `run_zero_field.py` | Solver ODE | ~10s | H(z), φ(z), w_φ(z) |
+| `chi2_bao.py` | Análise χ² BAO | ~30s | χ², veredito |
+| `parameter_sweep.py` | Otimização parâmetros | ~5min | Parâmetros ótimos |
+| `validation_notebook.py` | **Pipeline completo** | ~3min | Plots + relatório |
 
-### Fase 3b: Publicação
-1. Executar modo `publication`
-2. Gerar manuscrito LaTeX
-3. Submeter a arXiv (astro-ph.CO)
-4. Consultar `ARXIV_READY.md` para checklist completo
+**Recomendação:** Execute `validation_notebook.py` para visualizar tudo de uma vez.
 
 ---
 
-## 📞 Suporte
-
-**Repositório:** https://github.com/brunoviniciusdepaularodrigues1-creator/zero-field-primordial
-
-**Documentação:**
-- `README.md` - Overview e filosofia
-- `ARXIV_READY.md` - Roadmap de publicação
-- `VEREDITO_FINAL.md` - Resumo de resultados
-- `EXECUTION_GUIDE.md` - Este arquivo
-
-**Issues:** Abra uma issue no GitHub para reportar problemas ou sugestões
-
----
-
-## ✅ Checklist de Validação
-
-Antes de considerar análise completa:
-
-- [ ] Todas dependências instaladas (`pip list`)
-- [ ] Dados presentes em `data/` (bao_data.csv, sn_data.csv)
-- [ ] Quick mode executa sem erros
-- [ ] Full mode completa com todos outputs
-- [ ] Plots gerados e visualizáveis
-- [ ] Critério de refutabilidade compreendido
-- [ ] CHAVE + 0 verificados em todos outputs
-
----
-
-**Versão:** 1.0 (2026-02-09 18:00 BRT)
-**Mantido por:** Bruno Vinicius de Paulo Rodrigues
-**Licença:** MIT
-
-> "Executar ciência com honestidade é mais importante que executar ciência com sucesso."
-> 
-> — Princípio 0
+**Última atualização:** 2026-07-10  
+**Status:** ✅ Operacional  
+**Próxima etapa:** Fase 7 (SNe)
